@@ -5,6 +5,9 @@ public class Tarea8 {
 
         try {
             Process process = Runtime.getRuntime().exec("ping -n 4 8.8.8.8");
+            Thread.sleep(3000);
+            process.destroy();
+
             int exitCode = process.waitFor();
             System.out.println("Código de salida del ping: " + exitCode);
         } catch (IOException | InterruptedException e) {
