@@ -6,7 +6,7 @@ public class ResolucionPingFindstr {
     public static void main(String[] args) {
         try {
             // Paso 1
-            ProcessBuilder pbPing = new ProcessBuilder("ping", "www.google.com", "-n", "2");
+            ProcessBuilder pbPing = new ProcessBuilder("ping", "www.google.com", "-n", "4");
             ProcessBuilder pbFindstr = new ProcessBuilder("findstr", ".");
             // Paso 2
             Process procPing = pbPing.start();

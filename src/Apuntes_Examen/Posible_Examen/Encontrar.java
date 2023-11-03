@@ -4,30 +4,48 @@ import java.io.*;
 import java.util.Scanner;
 
 public class Encontrar {
-    public static void main(String[] args){
-        ProcessBuilder pbType = new ProcessBuilder("type", "nombres.dat");
-        ProcessBuilder pbFindstr = new ProcessBuilder("findstr", "Paula");
+    public static void main(String[] args) {
+        String ruta = "C:\\Users\\Rubén\\IdeaProjects\\Ejercicios_PS\\src\\Apuntes_Examen\\Posible_Examen\\";
+
+        Scanner sc = new Scanner(System.in);
+        System.out.println("Introduce un nombre que quieras buscar");
+        String nombre = sc.nextLine();
+
+        ProcessBuilder pbType = new ProcessBuilder("cmd", "/c", "type", ruta + "nombres.dat");
+        ProcessBuilder pbFindstr = new ProcessBuilder("findstr", nombre);
 
         try {
             Process procType = pbType.start();
             Process procFindstr = pbFindstr.start();
 
             Scanner inType = new Scanner(procType.getInputStream());
-            Scanner inFindstr = new Scanner(procFindstr.getInputStream());
             PrintWriter writer = new PrintWriter(procFindstr.getOutputStream());
+
+            boolean coincidencias = false;
+
             while (inType.hasNextLine()) {
-                writer.println(inType.nextLine());
+                String line = inType.nextLine();
+                if (line.contains(nombre)) {
+                    writer.println(line);
+                    coincidencias = true; // Se encontró al menos una coincidencia
+                }
             }
             writer.close();
             procType.waitFor();
 
-            System.out.println("Mostrando informacion");
-            while (inFindstr.hasNextLine()) {
-                System.out.println(inFindstr.nextLine());
+            if (coincidencias) {
+                Scanner inFindstr = new Scanner(procFindstr.getInputStream());
+                System.out.println("Mostrando información");
+                while (inFindstr.hasNextLine()) {
+                    System.out.println(inFindstr.nextLine());
+                }
+                procFindstr.waitFor();
+            } else {
+                System.out.println("No se encontraron coincidencias");
             }
-            procFindstr.waitFor();
-        } catch (IOException | InterruptedException ex) {
-            ex.printStackTrace();
+            
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Error detectado: " + e.getMessage());
         }
     }
 }
