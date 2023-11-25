@@ -49,28 +49,19 @@ class Cuenta {
 }
 
 class Transferencia {
-    public static boolean TransferenciaRealizada(Cuenta c1, Cuenta c2, double cantidad){
-        synchronized (c1){
-            synchronized (c2){
-                if(c1.getSaldo() >= cantidad){
-                    c1.sacaCantidad(cantidad);
-                    c2.ingresaCantidad(cantidad);
-                    return true;
-                }else{
-                    return false;
-                }
-            }
-        }
+    private Cuenta c1;
+    private Cuenta c2;
+    Transferencia(Cuenta c1, Cuenta c2){
+        this.c1 = c1;
+        this.c2 = c2;
     }
-}
 
-class TransferenciaConBloqueo {
-    public static boolean TransferenciaRealizada(Cuenta c1, Cuenta c2, double cantidad){
-        synchronized (c1){
-            synchronized (c2){
-                if(c1.getSaldo() >= cantidad){
-                    c1.sacaCantidad(cantidad);
-                    c2.ingresaCantidad(cantidad);
+    public boolean TransferenciaRealizada(double cantidad){
+        synchronized (this.c1){
+            synchronized (this.c2){
+                if(this.c1.getSaldo() >= cantidad && cantidad > 0){
+                    this.c1.sacaCantidad(cantidad);
+                    this.c2.ingresaCantidad(cantidad);
                     return true;
                 }else{
                     return false;
@@ -84,19 +75,21 @@ class HiloTransferencia implements Runnable {
     private String nombreHilo;
     private Cuenta c1;
     private Cuenta c2;
+    private Transferencia t;
 
-    HiloTransferencia(String nombreHilo, Cuenta c1, Cuenta c2){
+    HiloTransferencia(String nombreHilo, Cuenta c2, Cuenta c1){
         this.nombreHilo = nombreHilo;
         this.c1 = c1;
         this.c2 = c2;
+        this.t = new Transferencia(this.c1, this.c2);
     }
     @Override
     public void run() {
-        int dineroTranferir = 1000;
+        int dineroTranferir = 10;
         int contadorTransferencias = 0;
 
         for(int i = 0; i < 1000; i++){
-            if(Transferencia.TransferenciaRealizada(c1, c2, dineroTranferir)){
+            if(t.TransferenciaRealizada(dineroTranferir)){
                 contadorTransferencias++;
             }else{
                 System.err.println("Transferencia denegada por el " + this.nombreHilo +
