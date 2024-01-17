@@ -35,16 +35,21 @@ public class Cocina {
         Cocinero cocinero_6 = new Cocinero("Anabel", false);
         Cocinero cocinero_7 = new Cocinero("Anelsy", true);
 
-        Thread hiloCocinero_1 = new Thread(new HiloCocinero(cocinero_1, aguaFria, aguaCaliente, seRellena));
-        Thread hiloCocinero_2 = new Thread(new HiloCocinero(cocinero_2, aguaFria, aguaCaliente, seRellena));
-        Thread hiloCocinero_3 = new Thread(new HiloCocinero(cocinero_3, aguaFria, aguaCaliente, seRellena));
-        Thread hiloCocinero_4 = new Thread(new HiloCocinero(cocinero_4, aguaFria, aguaCaliente, seRellena));
-        Thread hiloCocinero_5 = new Thread(new HiloCocinero(cocinero_5, aguaFria, aguaCaliente, seRellena));
-        Thread hiloCocinero_6 = new Thread(new HiloCocinero(cocinero_6, aguaFria, aguaCaliente, seRellena));
-        Thread hiloCocinero_7 = new Thread(new HiloCocinero(cocinero_7, aguaFria, aguaCaliente, seRellena));
+        Thread hiloCocinero_1 = new Thread(new HiloCocinero(cocinero_1, aguaFria, aguaCaliente, seRellena, null, null));
+        Thread hiloCocinero_2 = new Thread(new HiloCocinero(cocinero_2, aguaFria, aguaCaliente, seRellena, null, null));
+        Thread hiloCocinero_3 = new Thread(new HiloCocinero(cocinero_3, aguaFria, aguaCaliente, seRellena, null, null));
+        Thread hiloCocinero_4 = new Thread(new HiloCocinero(cocinero_4, aguaFria, aguaCaliente, seRellena, null, null));
+        Thread hiloCocinero_5 = new Thread(new HiloCocinero(cocinero_5, aguaFria, aguaCaliente, seRellena, null, null));
+        Thread hiloCocinero_6 = new Thread(new HiloCocinero(cocinero_6, aguaFria, aguaCaliente, seRellena, null, null));
+
+        HiloCocineroRellena menteFria = new HiloCocineroRellena(aguaFria, cocinero_7);
+        HiloCocineroRellena menteCaliente = new HiloCocineroRellena(aguaCaliente, cocinero_7);
+        Thread hiloCocinero_7 = new Thread(new HiloCocinero(cocinero_7, aguaFria, aguaCaliente, seRellena, menteFria, menteCaliente));
 
         System.out.println("-----\tCUBO DE AGUA FRÍA\t\t-\t" + aguaFria.getAguaActual()/100f + "\t-----" +
                 "\n-----\tCUBO DE AGUA CALIENTE\t-\t" + aguaCaliente.getAguaActual()/100f + "\t-----");
+
+        hiloCocinero_7.setPriority(2);
 
         hiloCocinero_1.start();
         hiloCocinero_2.start();
@@ -83,6 +88,10 @@ class CuboAgua{
     
     public synchronized int getAguaActual() { return this.aguaActual; }
 
+    public int getCapacidadTotal() { return this.capacidadTotal; }
+
+    public String getTemperatura() { return this.temperatura; }
+
     public synchronized int interactuarCubo(int aguaNecesaria, Cocinero cocinero, boolean alguienRellena) throws InterruptedException {
         if(!alguienRellena){
             if(!isEmpty()){
@@ -112,10 +121,12 @@ class CuboAgua{
 
                 return 1;
             }else{
-                if(isEmpty() || this.aguaActual < aguaNecesaria){
+                while(isEmpty() || this.aguaActual < aguaNecesaria){
                     System.out.println(cocinero.getNombre() + " esta esperando a que haya suficiente agua " + this.temperatura.toLowerCase());
                     wait();
                 }
+
+                this.aguaActual -= aguaNecesaria;
 
                 System.out.println("Plato realizado por " + cocinero.getNombre() + " con " + aguaNecesaria/100f + " litros de agua " + this.temperatura.toLowerCase());
 
@@ -125,7 +136,6 @@ class CuboAgua{
                     System.out.println("-----\tCUBO DE AGUA " + temperatura.toUpperCase() + "\t\t-\t" + getAguaActual()/100f + "\t-----\n");
                 }
 
-                this.aguaActual -= aguaNecesaria;
                 notify();
                 return aguaNecesaria;
             }
@@ -133,25 +143,26 @@ class CuboAgua{
     }
 
     public synchronized void meterAgua(Cocinero cocinero) throws InterruptedException {
-        if(this.aguaActual >= this.capacidadTotal || (this.aguaActual + 5000) >= this.capacidadTotal){
+        while (this.aguaActual >= this.capacidadTotal || (this.aguaActual + 5000) >= this.capacidadTotal){
             System.out.println("El cubo de agua " + this.temperatura.toLowerCase() + " esta lleno y " + cocinero.getNombre() + " no puede rellenarlo");
             wait();
-        }else{
-            System.out.println("El cocinero " + cocinero.getNombre() + " ha rellenado con 50 litros el cubo de agua " + this.temperatura.toLowerCase());
-            this.aguaActual += 5000;
-
-            if (this.temperatura.equals("Caliente")){
-                System.out.println("-----\tCUBO DE AGUA " + temperatura.toUpperCase() + "\t-\t" + getAguaActual()/100f + "\t-----\n");
-            }else{
-                System.out.println("-----\tCUBO DE AGUA " + temperatura.toUpperCase() + "\t\t-\t" + getAguaActual()/100f + "\t-----\n");
-            }
-
-            notifyAll();
         }
+
+        this.aguaActual += 5000;
+
+        System.out.println("El cocinero " + cocinero.getNombre() + " ha rellenado con 50 litros el cubo de agua " + this.temperatura.toLowerCase());
+
+        if (this.temperatura.equals("Caliente")){
+            System.out.println("-----\tCUBO DE AGUA " + temperatura.toUpperCase() + "\t-\t" + getAguaActual()/100f + "\t-----\n");
+        }else{
+            System.out.println("-----\tCUBO DE AGUA " + temperatura.toUpperCase() + "\t\t-\t" + getAguaActual()/100f + "\t-----\n");
+        }
+
+        notifyAll();
     }
     
     public synchronized boolean isEmpty(){
-        if(this.aguaActual == 0){
+        if(this.aguaActual <= 0){
             if(!this.estaVacio){
                 System.out.println("-----\tCUBO DE AGUA " + this.temperatura.toUpperCase() + " VACÍO");
                 this.estaVacio = true;
@@ -209,7 +220,7 @@ class Cocinero{
     public boolean getRellena(){ return this.rellena; }
 
     public String toString(){
-        return "Cocinero " + this.nombre +
+        return "\nCocinero " + this.nombre +
                 "\nTotal de platos realizados: " + this.numeroPlatos +
                 "\nAgua fría utilizada: " + this.aguaFriaUtilizada/100f + " litros" +
                 "\nAgua caliente utilizada: " + this.aguaCalienteUtilizada/100f + " litros";
@@ -221,12 +232,17 @@ class HiloCocinero implements Runnable{
     private CuboAgua cuboAguaFria;
     private CuboAgua cuboAguaCaliente;
     private boolean alguienRellena;
-    
-    public HiloCocinero(Cocinero cocinero, CuboAgua cuboAguaFria, CuboAgua cuboAguaCaliente, boolean alguienRellena){
+
+    private HiloCocineroRellena menteFria;
+    private HiloCocineroRellena menteCaliente;
+
+    public HiloCocinero(Cocinero cocinero, CuboAgua cuboAguaFria, CuboAgua cuboAguaCaliente, boolean alguienRellena, HiloCocineroRellena menteFria, HiloCocineroRellena menteCaliente){
         this.cocinero = cocinero;
         this.cuboAguaFria = cuboAguaFria;
         this.cuboAguaCaliente = cuboAguaCaliente;
         this.alguienRellena = alguienRellena;
+        this.menteFria = menteFria;
+        this.menteCaliente = menteCaliente;
     }
     
     @Override
@@ -234,17 +250,17 @@ class HiloCocinero implements Runnable{
         if(this.cocinero.getRellena()){
             System.out.println("Soy el cocinero " + this.cocinero.getNombre() + " y voy a encargarme de rellenar los cubos de agua");
 
-            try {
-                this.cocinero.setNumeroRellenos(cuboAguaFria.interactuarCubo(0, this.cocinero, this.alguienRellena));
-                this.cocinero.setNumeroRellenos(cuboAguaCaliente.interactuarCubo(0, this.cocinero, this.alguienRellena));
+            Thread HilomenteFria = new Thread(this.menteFria);
+            Thread HilomenteCaliente = new Thread(this.menteCaliente);
 
-                while(true){
-                    Thread.sleep(4000);
-                    this.cocinero.setNumeroRellenos(cuboAguaFria.interactuarCubo(0, this.cocinero, this.alguienRellena));
-                    this.cocinero.setNumeroRellenos(cuboAguaCaliente.interactuarCubo(0, this.cocinero, this.alguienRellena));
-                }
+            HilomenteFria.start();
+            HilomenteCaliente.start();
+
+            try {
+                HilomenteFria.join();
+                HilomenteCaliente.join();
             } catch (InterruptedException e) {
-                System.err.println("Error detectado: " + e.getMessage());
+                throw new RuntimeException(e);
             }
 
         }else{
@@ -298,5 +314,39 @@ class HiloCocinero implements Runnable{
         }
 
         System.out.println(this.cocinero.toString());
+    }
+}
+
+class HiloCocineroRellena implements Runnable {
+    private CuboAgua cubo;
+    private Cocinero cocinero;
+
+    public HiloCocineroRellena(CuboAgua cubo, Cocinero cocinero) {
+        this.cubo = cubo;
+        this.cocinero = cocinero;
+    }
+
+    @Override
+    public void run() {
+        try {
+            if (cubo.getTemperatura().equals("Fría")) {
+                this.cocinero.setNumeroRellenos(cubo.interactuarCubo(0, this.cocinero, true));
+
+                while (true) {
+                    Thread.sleep(4000);
+                    this.cocinero.setNumeroRellenos(cubo.interactuarCubo(0, this.cocinero, true));
+                }
+            } else {
+                this.cocinero.setNumeroRellenos(cubo.interactuarCubo(0, this.cocinero, true));
+
+                while (true) {
+                    Thread.sleep(4000);
+                    this.cocinero.setNumeroRellenos(cubo.interactuarCubo(0, this.cocinero, true));
+                }
+            }
+
+        } catch (InterruptedException e) {
+            System.err.println("Error detectado: " + e.getMessage());
+        }
     }
 }
