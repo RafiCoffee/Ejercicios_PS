@@ -21,7 +21,7 @@ public class ClienteTcpChat {
         try{
             System.out.println("Conectando con el servidor con el puerto " + numServidor);
             conexionServidor = new Socket(host, numServidor);
-            RecibirMensajes respuestasServidor = new RecibirMensajes(conexionServidor);
+            recibirRespuestasServidor respuestasServidor = new recibirRespuestasServidor(conexionServidor);
             respuestasServidor.start();
 
             System.out.println("Cliente conectado al servidor " + numServidor);
@@ -45,9 +45,9 @@ public class ClienteTcpChat {
         }
     }
 }
-class RecibirMensajes extends Thread{
+class recibirRespuestasServidorChat extends Thread{
     private Socket conexion;
-    public RecibirMensajes(Socket conexion){
+    public recibirRespuestasServidorChat(Socket conexion){
         this.conexion = conexion;
     }
     @Override
@@ -61,8 +61,6 @@ class RecibirMensajes extends Thread{
             }
         }catch (IOException e){
             System.err.println("Error de algun tipo");
-        }catch (NoSuchElementException e){
-            System.out.println("El servidor ha cerrado");
         }
     }
 }
