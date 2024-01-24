@@ -3,17 +3,17 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import java.util.*;
 
 public class ServerTcpChat {
     public static void main(String[] args) {
+        List<Socket> clientes = new ArrayList<>();
         int numPuertoServidor;
         ServerSocket servidor;
         Socket conexion;
 
         if(args.length < 1){
-            System.err.println("Debes determinar un número para crear el servidor");
+            System.err.println("Debes determinar un numero para crear el servidor");
             System.exit(1);
         }
 
@@ -26,69 +26,82 @@ public class ServerTcpChat {
             while (true){
                 conexion = servidor.accept();
 
-                ServidorHilo hiloServidor = new ServidorHilo(conexion);
-                hiloServidor.start();
-                recibirRespuestasClientes respuestasCliente = new recibirRespuestasClientes(conexion);
-                respuestasCliente.start();
+                EnviarMensajes enviarMensajes = new EnviarMensajes(clientes);
+                enviarMensajes.start();
+
+                RecibirMensajes recibirMensajes = new RecibirMensajes(conexion, clientes);
+                recibirMensajes.start();
+
+                clientes.add(conexion);
             }
 
         }catch (IOException e){
             System.err.println("Error de algún tipo");
         }
     }
-}
 
-class ServidorHilo extends Thread{
-    private Socket conexion;
-    public ServidorHilo(Socket conexion){
-        this.conexion = conexion;
-    }
-    @Override
-    public void run() {
-        InetAddress ipCliente = conexion.getInetAddress();
-        try{
-            Scanner scServer = new Scanner(System.in);
-            PrintWriter pW = new PrintWriter(conexion.getOutputStream());
+    static class RecibirMensajes extends Thread{
+        private Socket conexion;
+        List<Socket> clientes;
+        public RecibirMensajes(Socket conexion, List<Socket> clientes){
+            this.conexion = conexion;
+            this.clientes = clientes;
+        }
+        @Override
+        public void run() {
+            InetAddress ipCliente = conexion.getInetAddress();
+            try{
+                Scanner scCliente = new Scanner(conexion.getInputStream());
 
-            System.out.println("El cliente con IP " + ipCliente + " se ha conectado");
+                System.out.println("----- El cliente con IP " + ipCliente + " se ha conectado -----");
 
-            while (true){
-                String respuesta;
-                respuesta = scServer.nextLine();
+                while(true){
+                    String lineaRecibida = scCliente.nextLine();
+                    System.out.println("Mensaje del cliente con IP " + ipCliente + ": " + lineaRecibida);
 
-                pW.println("\t" + respuesta);
-                pW.flush();
+                    synchronized (clientes){
+                        for(Socket conexionesClientes : clientes){
+                            if(conexion != conexionesClientes){
+                                PrintWriter pW = new PrintWriter(conexionesClientes.getOutputStream(), true);
+                                pW.println(ipCliente + ": " + lineaRecibida);
+                            }
+                        }
+                    }
+                }
+            }catch (IOException e){
+                System.err.println("Error de algun tipo");
+            }catch (NoSuchElementException e){
+                System.out.println("----- El cliente con IP " + ipCliente + " dejó la conversacion -----");
+                clientes.remove(conexion);
             }
-        }catch (IOException e){
-            System.err.println("Error de algun tipo");
-        }catch (NoSuchElementException e){
-            System.out.println("El cliente con la IP " + ipCliente + " ha cerrado su conexion...");
         }
     }
-}
 
-class recibirRespuestasClientes extends Thread{
-    private Socket conexion;
-    public recibirRespuestasClientes(Socket conexion){
-        this.conexion = conexion;
-    }
-    @Override
-    public void run() {
-        try{
-            Scanner scCliente = new Scanner(conexion.getInputStream());
-            PrintWriter pW = new PrintWriter(conexion.getOutputStream());
+    static class EnviarMensajes extends Thread{
+        List<Socket> clientes;
+        public EnviarMensajes(List<Socket> clientes){
+            this.clientes = clientes;
+        }
+        @Override
+        public void run() {
+            try{
+                Scanner scServer = new Scanner(System.in);
 
-            String lineaRecibida;
-            while((lineaRecibida = scCliente.nextLine()) != null && !lineaRecibida.isEmpty()){
-                System.out.println(lineaRecibida);
+                while (true){
+                    String mensaje = scServer.nextLine();
 
-                pW.println(conexion.getInetAddress() + ": " + lineaRecibida);
-                pW.flush();
+                    synchronized (clientes){
+                        for(Socket conexionesClientes : clientes){
+                            PrintWriter pW = new PrintWriter(conexionesClientes.getOutputStream(), true);
+                            pW.println("Servidor: " + mensaje);
+                        }
+                    }
+                }
+            }catch (IOException e){
+                System.err.println("Error de algun tipo");
+            }catch (NoSuchElementException e){
+
             }
-        }catch (IOException e){
-            System.err.println("Error de algun tipo");
-        }catch (NoSuchElementException e){
-            System.out.println("El cliente dejó la conversacion");
         }
     }
 }
