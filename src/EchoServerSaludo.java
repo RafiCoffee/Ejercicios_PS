@@ -1,12 +1,10 @@
-package Sockets.EjemplosClase;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 
-public class EchoServer {
+public class EchoServerSaludo {
     private static final int MAXBYTES=1400;
     private static final String CODTEXTO="UTF-8";
     public static void main(String[] args)  {
@@ -22,31 +20,33 @@ public class EchoServer {
         }
 
         numPuertoServidor = Integer.parseInt(args[0]);
-        
-        //creamos el socket asociado al puerto. Se pone a la escucha.
+
         try (DatagramSocket socket = new DatagramSocket(numPuertoServidor)){
             while(true){
                 System.out.println("Esperando algún datagrama");
-                byte[] bufferEntrada = new byte[MAXBYTES];  //creamos el buffer
+                byte[] bufferEntrada = new byte[MAXBYTES];
                 paqueteUdp = new DatagramPacket(bufferEntrada, bufferEntrada.length);
-                socket.receive(paqueteUdp); //recivimos un datagrama paqueteUdp
-                //SACAMOS LOS DATOS DEL PAQUETE, DESPLAZAMIENTO 0, TAMAÑO A LEER Y CODIFICACIÓN
+                socket.receive(paqueteUdp);
                 String lineaRecibida = new String(paqueteUdp.getData(), 0, paqueteUdp.getLength(),CODTEXTO);
-                ipCliente = paqueteUdp.getAddress(); //sacamos la ip del cliente.
-                numPuertoCliente = paqueteUdp.getPort();//sacamos el puerto origen del cliente
-                String lineaReplicar="#"+lineaRecibida+"#";  //modicamos la respuesta con dos #
+                ipCliente = paqueteUdp.getAddress();
+                numPuertoCliente = paqueteUdp.getPort();
 
-                //ahora debemos mandar la respuesta en un nuevo datagrama al Cliente
-                //preparamos otro buffer para enviar, 
-                //podría el mismo por el que hemos recibido, pero utilizamos otro.
+                String respuesta = "";
+                if(lineaRecibida.startsWith("Hola, soy ") && lineaRecibida.endsWith(" y quiero saludarle")){
+                    String lineaAux = lineaRecibida.substring(9);
+                    String[] cadenas = lineaAux.split(" ");
+                    respuesta = "Muchas gracias " + cadenas[1] + ", yo también le saludo a usted";
+                }else{
+                    respuesta = "#"+lineaRecibida+"#";
+                }
+
                 byte []bufferSalida = new byte[MAXBYTES]; 
-                bufferSalida = lineaReplicar.getBytes();  //ponemos en el buffer el mensaje a mandar
-                //Creamos el datagrama con los datos, la longitud, la ip del cliente y su puerto
+                bufferSalida = respuesta.getBytes();
                 paqueteUdp = new DatagramPacket(bufferSalida, bufferSalida.length, ipCliente, numPuertoCliente);
-                //Ahora debemos enviarlo a nuestro socket.
+
                 socket.send(paqueteUdp);
-            } //fin del while
-        }//fin del try
+            }
+        }
         catch(SocketException e){
             System.out.println("Error en el socket servidor");
         }catch(IOException e){

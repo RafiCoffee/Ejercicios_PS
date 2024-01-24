@@ -1,5 +1,3 @@
-package Sockets.EjemplosClase;
-
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;

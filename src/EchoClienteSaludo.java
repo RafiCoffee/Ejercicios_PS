@@ -1,5 +1,3 @@
-package Sockets.EjemplosClase;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -7,7 +5,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.util.Scanner;
 
-public class EchoCliente {
+public class EchoClienteSaludo {
 
     private static final int MAXBYTES=1400;
     private static final String CODTEXTO = "UTF-8";
