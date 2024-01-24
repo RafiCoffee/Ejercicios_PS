@@ -5,7 +5,7 @@ import java.net.Socket;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-public class ClienteTcpApuntes {
+public class ClienteTcpChat {
     public static void main(String[] args) {
         int numServidor;
         String host;
@@ -45,9 +45,9 @@ public class ClienteTcpApuntes {
         }
     }
 }
-class recibirRespuestasServidor extends Thread{
+class recibirRespuestasServidorChat extends Thread{
     private Socket conexion;
-    public recibirRespuestasServidor(Socket conexion){
+    public recibirRespuestasServidorChat(Socket conexion){
         this.conexion = conexion;
     }
     @Override
