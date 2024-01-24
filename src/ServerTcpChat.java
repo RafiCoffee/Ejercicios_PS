@@ -6,9 +6,9 @@ import java.net.Socket;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-public class ServerTcpApuntes {
+public class ServerTcpChat {
     public static void main(String[] args) {
-        int numServidor;
+        int numPuertoServidor;
         ServerSocket servidor;
         Socket conexion;
 
@@ -17,17 +17,19 @@ public class ServerTcpApuntes {
             System.exit(1);
         }
 
-        numServidor = Integer.parseInt(args[0]);
+        numPuertoServidor = Integer.parseInt(args[0]);
         try{
-            System.out.println("Creamos el servidor con el numero " + numServidor);
-            servidor = new ServerSocket(numServidor);
-            System.out.println("Aceptamos la conexion y esperamos al cliente");
+            System.out.println("Creamos el servidor con el numero " + numPuertoServidor);
+            servidor = new ServerSocket(numPuertoServidor);
+            System.out.println("Aceptamos la conexion y esperamos a los clientes");
 
             while (true){
                 conexion = servidor.accept();
 
-                HiloServidor hiloServidor = new HiloServidor(conexion);
+                ServidorHilo hiloServidor = new ServidorHilo(conexion);
                 hiloServidor.start();
+                recibirRespuestasClientes respuestasCliente = new recibirRespuestasClientes(conexion);
+                respuestasCliente.start();
             }
 
         }catch (IOException e){
@@ -36,23 +38,20 @@ public class ServerTcpApuntes {
     }
 }
 
-class HiloServidor extends Thread{
+class ServidorHilo extends Thread{
     private Socket conexion;
-    public HiloServidor(Socket conexion){
+    public ServidorHilo(Socket conexion){
         this.conexion = conexion;
     }
     @Override
     public void run() {
         InetAddress ipCliente = conexion.getInetAddress();
         try{
-            System.out.println("Hilo " + this.getName() + " comienza con el cliente con IP " + ipCliente);
-            recibirRespuestasCliente respuestasCliente = new recibirRespuestasCliente(conexion);
-            respuestasCliente.start();
-
             Scanner scServer = new Scanner(System.in);
             PrintWriter pW = new PrintWriter(conexion.getOutputStream());
 
-            System.out.println("Comienza la conversacion");
+            System.out.println("El cliente con IP " + ipCliente + " se ha conectado");
+
             while (true){
                 String respuesta;
                 respuesta = scServer.nextLine();
@@ -68,19 +67,23 @@ class HiloServidor extends Thread{
     }
 }
 
-class recibirRespuestasCliente extends Thread{
+class recibirRespuestasClientes extends Thread{
     private Socket conexion;
-    public recibirRespuestasCliente(Socket conexion){
+    public recibirRespuestasClientes(Socket conexion){
         this.conexion = conexion;
     }
     @Override
     public void run() {
         try{
             Scanner scCliente = new Scanner(conexion.getInputStream());
+            PrintWriter pW = new PrintWriter(conexion.getOutputStream());
 
             String lineaRecibida;
             while((lineaRecibida = scCliente.nextLine()) != null && !lineaRecibida.isEmpty()){
                 System.out.println(lineaRecibida);
+
+                pW.println(conexion.getInetAddress() + ": " + lineaRecibida);
+                pW.flush();
             }
         }catch (IOException e){
             System.err.println("Error de algun tipo");
