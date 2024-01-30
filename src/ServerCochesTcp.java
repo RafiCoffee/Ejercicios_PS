@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -33,13 +34,10 @@ public class ServerCochesTcp {
             servidor = new ServerSocket(numServidor);
             System.out.println("Aceptamos la conexion y esperamos al cliente");
 
-            while (true){
-                conexion = servidor.accept();
+            conexion = servidor.accept();
 
-                ManejarPeticiones manejoPeticiones = new ManejarPeticiones(conexion, listaCoches);
-                manejoPeticiones.start();
-            }
-
+            ManejarPeticiones manejoPeticiones = new ManejarPeticiones(conexion, listaCoches);
+            manejoPeticiones.start();
 
         } catch (IOException e) {
             System.err.println("Error de algún tipo");
@@ -47,7 +45,7 @@ public class ServerCochesTcp {
     }
 }
 
-class Coche{
+class Coche implements Comparable<Coche>{
     private final int id;
     private String modelo;
     private int cilindrada;
@@ -85,6 +83,11 @@ class Coche{
                 "\nModelo: " + this.modelo +
                 "\nCilindrada: " + this.cilindrada;
     }
+
+    @Override
+    public int compareTo(Coche otroCoche) {
+        return Integer.compare(this.id, otroCoche.getId());
+    }
 }
 
 class ManejarPeticiones extends Thread{
@@ -120,7 +123,6 @@ class ManejarPeticiones extends Thread{
                                 if(listaCoches.get(i).getId() != posibleId){
                                     listaCoches.add(new Coche(posibleId, peticionDesectructurada[1], Integer.parseInt(peticionDesectructurada[2])));
                                     posibleId = 0;
-                                    System.out.println("Entra");
                                     break;
                                 }else{
                                     posibleId++;
@@ -129,6 +131,7 @@ class ManejarPeticiones extends Thread{
                             if(posibleId != 0){
                                 listaCoches.add(new Coche(posibleId, peticionDesectructurada[1], Integer.parseInt(peticionDesectructurada[2])));
                             }
+                            Collections.sort(listaCoches);
                             pW.println("El coche introducido se ha añadido a la lista correctamente");
                             break;
 
@@ -138,13 +141,14 @@ class ManejarPeticiones extends Thread{
                                 for (Coche listaCoche : listaCoches) {
                                     listadoIds += listaCoche.getId() + " - ";
                                 }
+
                                 listadoIds = listadoIds.substring(0, listadoIds.length() - 3);
                                 pW.println("Estas son las Ids disponibles en la lista:\n" + listadoIds);
                             }else{
                                 try{
                                     int idProporcionada = Integer.parseInt(peticionDesectructurada[1]);
 
-                                    pW.println(listaCoches.get(idProporcionada).toString());
+                                    pW.println(listaCoches.get(idProporcionada - 1).toString());
                                 }catch (NumberFormatException e){
                                     System.err.println("La Id proporcionada no es correcta");
                                     pW.println("La Id proporcionada no es correcta");
@@ -153,15 +157,29 @@ class ManejarPeticiones extends Thread{
                             break;
 
                         case "put":
+                            int idProporcionada = Integer.parseInt(peticionDesectructurada[1]);
 
+                            listaCoches.get(idProporcionada - 1).setModelo(peticionDesectructurada[2]);
+                            listaCoches.get(idProporcionada - 1).setCilindrada(Integer.parseInt(peticionDesectructurada[3]));
+
+                            System.out.println(listaCoches.get(idProporcionada - 1).toString());
+                            pW.println("Coche modificado con exito");
                             break;
 
                         case "delete":
+                            idProporcionada = Integer.parseInt(peticionDesectructurada[1]);
 
+                            listaCoches.remove(idProporcionada - 1);
+
+                            pW.println("Coche eliminado con exito");
                             break;
 
                         default:
-
+                            if(!peticionDesectructurada[0].equals("fin")){
+                                pW.println("Petición proporcionada erronea");
+                            }else{
+                                pW.println("Saliendo del servidor");
+                            }
                             break;
                     }
                 }

@@ -29,8 +29,8 @@ public class ClienteTcpApuntes {
             PrintWriter pW = new PrintWriter(conexionServidor.getOutputStream());
 
             System.out.println("Comienza la conversacion");
-            while (true){
-                String lineaEnviada;
+            String lineaEnviada = "";
+            while (!lineaEnviada.equals("fin")){
                 lineaEnviada = scCliente.nextLine();
 
                 pW.println(lineaEnviada);
@@ -41,7 +41,7 @@ public class ClienteTcpApuntes {
         } catch (IOException e){
             System.err.println("Error de algun tipo");
         }catch (NoSuchElementException ignored){
-            System.out.println("Saliendo del servidor con numero " + numServidor);
+            System.out.println("El servidor ha cerrado");
         }
     }
 }
@@ -61,6 +61,8 @@ class recibirRespuestasServidor extends Thread{
             }
         }catch (IOException e){
             System.err.println("Error de algun tipo");
+        }catch (NoSuchElementException e){
+            System.out.println("Has salido del servidor con el número de puerto " + conexion.getPort());
         }
     }
 }
