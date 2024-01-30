@@ -33,7 +33,7 @@ public class ClienteTcpApuntes {
                 String lineaEnviada;
                 lineaEnviada = scCliente.nextLine();
 
-                pW.println("\t" + lineaEnviada);
+                pW.println(lineaEnviada);
                 pW.flush();
             }
         } catch (ConnectException e){
