@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.InetAddress;
@@ -78,10 +79,11 @@ class Coche implements Comparable<Coche>{
 
     @Override
     public String toString() {
-        return "Coche:" +
-                "\nId: " + this.id +
-                "\nModelo: " + this.modelo +
-                "\nCilindrada: " + this.cilindrada;
+        return "Coche{" +
+                "id=" + id +
+                ", modelo='" + modelo + '\'' +
+                ", cilindrada=" + cilindrada +
+                "},";
     }
 
     @Override
@@ -185,6 +187,16 @@ class ManejarPeticiones extends Thread{
                 }
 
             }while (!peticion.equals("fin"));
+
+            File datosGuardados = new File("/Datos");
+            PrintWriter pWDts = new PrintWriter(datosGuardados);
+
+            String datos = "";
+            for(Coche coches : listaCoches){
+                datos += coches.toString();
+            }
+
+            pWDts.println(datos);
         }catch (IOException e){
             System.err.println("Error de algun tipo");
         }catch (NoSuchElementException e){
