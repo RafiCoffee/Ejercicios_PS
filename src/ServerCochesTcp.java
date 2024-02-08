@@ -1,6 +1,4 @@
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -24,11 +22,28 @@ public class ServerCochesTcp {
 
         numServidor = Integer.parseInt(args[0]);
 
-        listaCoches.add(new Coche(1, "mercedes", 2000));
-        listaCoches.add(new Coche(2, "alfa", 2200));
-        listaCoches.add(new Coche(3, "audi", 2500));
-        listaCoches.add(new Coche(4, "bmw", 3000));
-        listaCoches.add(new Coche(5, "cupra", 1700));
+        String ficheroString = "";
+        File fichero = new File("Datos", "coches.dat");
+        try(FileReader leerFichero = new FileReader(fichero)){
+            BufferedReader brFichero = new BufferedReader(leerFichero);
+            while (brFichero.ready()){
+                ficheroString += brFichero.readLine();
+            }
+            brFichero.close();
+        }catch (IOException e){
+            System.err.println("Error al leer el fichero");
+        }
+
+        String[] datosCoches = ficheroString.split("},");
+        datosCoches[datosCoches.length - 1] = datosCoches[datosCoches.length - 1].replace("}", "");
+        for(int i = 0; datosCoches.length > i; i++){
+            String[] datosCoche = datosCoches[i].split(":");
+            int idCoche = Integer.parseInt(datosCoche[1].substring(0, datosCoche[1].indexOf(",")));
+            String modeloCoche = datosCoche[2].substring(0, datosCoche[2].indexOf(","));
+            modeloCoche = modeloCoche.substring(1, modeloCoche.length() - 1);
+            int cilindradaCoche = Integer.parseInt(datosCoche[3].strip());
+            listaCoches.add(new Coche(idCoche, modeloCoche, cilindradaCoche));
+        }
 
         try{
             System.out.println("Creamos el servidor con el numero " + numServidor);
@@ -83,7 +98,7 @@ class Coche implements Comparable<Coche>{
                 "id=" + id +
                 ", modelo='" + modelo + '\'' +
                 ", cilindrada=" + cilindrada +
-                "},";
+                '}';
     }
 
     @Override
@@ -148,12 +163,16 @@ class ManejarPeticiones extends Thread{
                                 pW.println("Estas son las Ids disponibles en la lista:\n" + listadoIds);
                             }else{
                                 try{
+                                    System.out.println("Entra");
                                     int idProporcionada = Integer.parseInt(peticionDesectructurada[1]);
 
                                     pW.println(listaCoches.get(idProporcionada - 1).toString());
                                 }catch (NumberFormatException e){
                                     System.err.println("La Id proporcionada no es correcta");
                                     pW.println("La Id proporcionada no es correcta");
+                                }catch (ArrayIndexOutOfBoundsException e){
+                                    System.err.println("La Id proporcionada no existe");
+                                    pW.println("La Id proporcionada no existe");
                                 }
                             }
                             break;
@@ -176,6 +195,15 @@ class ManejarPeticiones extends Thread{
                             pW.println("Coche eliminado con exito");
                             break;
 
+                        case "help":
+                            pW.println("Comandos permitidos:\n" +
+                                    "\"post \'modelo\' \'cilindrada\'\" --> Introducir un coche en la lista\n" +
+                                    "\"get \'id\'\" --> Imprimir informacion de un coche en especifico\n" +
+                                    "\"get ?\" --> Imprimir los ids disponibles\n" +
+                                    "\"put \'id\' \'modelo\' \'cilindrada\'\" --> Editar la información de un coche en especifico\n" +
+                                    "\"delete \'id\'\" --> Eliminar un coche en especifico");
+                            break;
+
                         default:
                             if(!peticionDesectructurada[0].equals("fin")){
                                 pW.println("Petición proporcionada erronea");
@@ -188,15 +216,24 @@ class ManejarPeticiones extends Thread{
 
             }while (!peticion.equals("fin"));
 
-            File datosGuardados = new File("/Datos");
-            PrintWriter pWDts = new PrintWriter(datosGuardados);
+            File crearFichero = new File("Datos", "coches.dat");
+            try(FileWriter escribirFichero = new FileWriter(crearFichero);){
+                PrintWriter pWFichero = new PrintWriter(escribirFichero);
 
-            String datos = "";
-            for(Coche coches : listaCoches){
-                datos += coches.toString();
+                String info = "";
+                for(Coche coche : listaCoches){
+                    info += "\t{\n" +
+                            "\t\t\"id\":" + coche.getId() +
+                            ",\n\t\t\"modelo\":\"" + coche.getModelo() + '\"' +
+                            ",\n\t\t\"cilindrada\":" + coche.getCilindrada() +
+                            "\n\t},\n";
+                }
+
+                info = info.substring(0, info.length() - 2);
+                pWFichero.println(info);
+            }catch (IOException e){
+                System.err.println("Error al crear o escribir el fichero");
             }
-
-            pWDts.println(datos);
         }catch (IOException e){
             System.err.println("Error de algun tipo");
         }catch (NoSuchElementException e){

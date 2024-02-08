@@ -6,6 +6,7 @@ import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class ClienteTcpApuntes {
+    boolean sesionIniciada = false;
     public static void main(String[] args) {
         int numServidor;
         String host;
@@ -26,7 +27,7 @@ public class ClienteTcpApuntes {
 
             System.out.println("Cliente conectado al servidor " + numServidor);
             Scanner scCliente = new Scanner(System.in);
-            PrintWriter pW = new PrintWriter(conexionServidor.getOutputStream());
+            PrintWriter pW = new PrintWriter(conexionServidor.getOutputStream(), true);
 
             System.out.println("Comienza la conversacion");
             String lineaEnviada = "";
@@ -34,7 +35,6 @@ public class ClienteTcpApuntes {
                 lineaEnviada = scCliente.nextLine();
 
                 pW.println(lineaEnviada);
-                pW.flush();
             }
         } catch (ConnectException e){
             System.err.println("El servidor se encuentra cerrado");
@@ -43,6 +43,14 @@ public class ClienteTcpApuntes {
         }catch (NoSuchElementException ignored){
             System.out.println("El servidor ha cerrado");
         }
+    }
+
+    public boolean estaLaSesionIniciada(){
+        return this.sesionIniciada;
+    }
+
+    public void setSesionIniciada(){
+        sesionIniciada = !sesionIniciada;
     }
 }
 class recibirRespuestasServidor extends Thread{
