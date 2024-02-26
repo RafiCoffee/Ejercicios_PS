@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ServerCochesTcp {
     public static void main(String[] args) {
@@ -119,6 +121,8 @@ class ManejarPeticiones extends Thread{
     @Override
     public void run() {
         InetAddress ipCliente = socketComunicacion.getInetAddress();
+        String regex = "\\s*[a-zA-Z]+\\s+([0-9]+|\\?|[a-zA-Z]+)\\s*[1-9]*\\s*";
+        Pattern pattern = Pattern.compile(regex);
 
         try{
             System.out.println("Hilo " + this.getName() + " comienza con el cliente con IP " + ipCliente);
@@ -129,7 +133,20 @@ class ManejarPeticiones extends Thread{
             System.out.println("Realiza tus peticiones");
             String peticion;
             do{
-                peticion = scCliente.nextLine();
+                Matcher matcher;
+                do{
+                    peticion = scCliente.nextLine();
+                    matcher = pattern.matcher(peticion);
+                    if(!matcher.matches()){
+                        System.out.println("Petición incorrecta");
+                        pW.println("Petición incorrecta, introduce de nuevo");
+                    }else{
+                        if(matcher.group(1).matches("([0-9]+\\?)") && matcher.group(2).matches(".+")){
+                            System.out.println("Petición incorrecta");
+                            pW.println("Petición incorrecta, introduce de nuevo");
+                        }
+                    }
+                }while (matcher.matches() || !(matcher.group(1).matches("([0-9]+\\?)") && matcher.group(2).matches(".+")));
                 if(!peticion.equals("fin")){
                     String[] peticionDesectructurada = peticion.split(" ");
 
@@ -238,6 +255,8 @@ class ManejarPeticiones extends Thread{
             System.err.println("Error de algun tipo");
         }catch (NoSuchElementException e){
             System.out.println("El cliente con la IP " + ipCliente + " ha cerrado su conexion...");
+        }catch (IllegalStateException e){
+            System.out.println("Error en la peticion");
         }
     }
 }
