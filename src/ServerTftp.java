@@ -13,37 +13,13 @@ public class ServerTftp {
     static int PUERTOSERVERSECUNDARIO = 49999;
 
     public static void main(String[] args) {
-        List<Usuario> listaUsuarios = new ArrayList<>();
+        final List<Usuario> listaUsuarios = new ArrayList<>();
         int puertoServer = PUERTOSERVERPRINCIPAL;
         DatagramPacket paqueteUdp;
         InetAddress ipCliente;
         int puertoCliente;
 
-        String ficheroString = "";
-        File fichero = new File("Datos", "usuarios.dat");
-        try(FileReader leerFichero = new FileReader(fichero)){
-            BufferedReader brFichero = new BufferedReader(leerFichero);
-            while (brFichero.ready()){
-                ficheroString += brFichero.readLine();
-            }
-            brFichero.close();
-        }catch (IOException e){
-            System.err.println("Error al leer el fichero");
-        }
-
-        if(!ficheroString.isEmpty()){
-            String[] datosUsuarios = ficheroString.split("},");
-            datosUsuarios[datosUsuarios.length - 1] = datosUsuarios[datosUsuarios.length - 1].replace("}", "");
-            for(int i = 0; datosUsuarios.length > i; i++){
-                String[] datosUsuario = datosUsuarios[i].split(":");
-                int idUsuario = Integer.parseInt(datosUsuario[1].substring(0, datosUsuario[1].indexOf(",")));
-                String nombreUsuario = datosUsuario[2].substring(0, datosUsuario[2].indexOf(","));
-                nombreUsuario = nombreUsuario.substring(1, nombreUsuario.length() - 1);
-                String claveUsuario = datosUsuario[3].strip();
-                listaUsuarios.add(new Usuario(idUsuario, nombreUsuario, claveUsuario));
-                System.out.println(listaUsuarios.get(i).toString());
-            }
-        }
+        obtenerUsuarios(listaUsuarios);
 
         final AtomicInteger idUsuario = new AtomicInteger(listaUsuarios.size());
 
@@ -74,6 +50,33 @@ public class ServerTftp {
 
         }catch (IOException e){
 
+        }
+    }
+
+    private static void obtenerUsuarios(List<Usuario> listaUsuarios){
+        String ficheroString = "";
+        File fichero = new File("Datos", "usuarios.dat");
+        try(FileReader leerFichero = new FileReader(fichero)){
+            BufferedReader brFichero = new BufferedReader(leerFichero);
+            while (brFichero.ready()){
+                ficheroString += brFichero.readLine();
+            }
+            brFichero.close();
+        }catch (IOException e){
+            System.err.println("Error al leer el fichero o no existe");
+        }
+
+        if(!ficheroString.isEmpty()){
+            String[] datosUsuarios = ficheroString.split("},");
+            datosUsuarios[datosUsuarios.length - 1] = datosUsuarios[datosUsuarios.length - 1].replace("}", "");
+            for(int i = 0; datosUsuarios.length > i; i++){
+                String[] datosUsuario = datosUsuarios[i].split(":");
+                int idUsuario = Integer.parseInt(datosUsuario[1].substring(0, datosUsuario[1].indexOf(",")));
+                String nombreUsuario = datosUsuario[2].substring(0, datosUsuario[2].indexOf(","));
+                nombreUsuario = nombreUsuario.substring(1, nombreUsuario.length() - 1);
+                String claveUsuario = datosUsuario[3].substring(1, datosUsuario[3].length() - 2);
+                listaUsuarios.add(new Usuario(idUsuario, nombreUsuario, claveUsuario));
+            }
         }
     }
 }
@@ -128,7 +131,7 @@ class GestionarClientes extends Thread{
     private int puertoServer;
     private int puertoCliente;
     private InetAddress ipCliente;
-    private List<Usuario> listaUsuarios;
+    private final List<Usuario> listaUsuarios;
     private final AtomicInteger idUsuario;
     public GestionarClientes(int puertoServer, int puertoCliente, InetAddress ipCliente, List<Usuario> listaUsuarios, AtomicInteger idUsuario){
         this.puertoServer = puertoServer;
@@ -287,27 +290,33 @@ class GestionarClientes extends Thread{
                 }
             }
 
-            File crearFichero = new File("Datos", "usuarios.dat");
-            try(FileWriter escribirFichero = new FileWriter(crearFichero);){
-                PrintWriter pWFichero = new PrintWriter(escribirFichero);
-
-                String info = "";
-                for(Usuario usuario : listaUsuarios){
-                    info += "\t{\n" +
-                            "\t\t\"id\":" + usuario.getId() +
-                            ",\n\t\t\"username\":\"" + usuario.getUsername() + '\"' +
-                            ",\n\t\t\"clave\":" + usuario.getClave() +
-                            "\n\t},\n";
-                }
-
-                info = info.substring(0, info.length() - 2);
-                pWFichero.println(info);
-            }catch (IOException e){
-                System.err.println("Error al crear o escribir el fichero");
+            synchronized (listaUsuarios){
+                actualizarListaUsuarios(listaUsuarios);
             }
 
         }catch (IOException e){
 
+        }
+    }
+
+    private void actualizarListaUsuarios(List<Usuario> listaUsuarios){
+        File crearFichero = new File("Datos", "usuarios.dat");
+        try(FileWriter escribirFichero = new FileWriter(crearFichero);){
+            PrintWriter pWFichero = new PrintWriter(escribirFichero);
+
+            String info = "";
+            for(Usuario usuario : listaUsuarios){
+                info += "\t{\n" +
+                        "\t\t\"id\":" + usuario.getId() +
+                        ",\n\t\t\"username\":\"" + usuario.getUsername() + '\"' +
+                        ",\n\t\t\"clave\":\"" + usuario.getClave() + '\"' +
+                        "\n\t},\n";
+            }
+
+            info = info.substring(0, info.length() - 2);
+            pWFichero.println(info);
+        }catch (IOException e){
+            System.err.println("Error al crear o escribir el fichero");
         }
     }
 }
