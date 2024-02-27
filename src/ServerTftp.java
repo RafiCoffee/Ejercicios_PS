@@ -147,14 +147,14 @@ class GestionarClientes extends Thread{
 
         System.out.println("Nuevo Servidor Con Puerto: " + puertoServer);
 
-        String explicacionInicio = "Bienvenido\n" +
+        String explicacionInicio = "Bienvenid@\n" +
                 "Para iniciar sesión introduce este comando: log username password\n" +
                 "Si no estas registrado introduce este comando: reg username password password\n" +
-                "Para terminar la conexion en cualquier momento introduce: \"Fin trasmision\"";
+                "Para terminar la conexion en cualquier momento introduce: \"Fin transmision\"";
 
         try(DatagramSocket socketCliente = new DatagramSocket(puertoServer)){
             String lineaCliente = "";
-            String terminarConexion = "Fin trasmision";
+            String terminarConexion = "Fin transmision";
             boolean finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
             while (!finFtp){
                 byte[] bufferSalidaInicial = new byte[MAXBYTES];
@@ -166,7 +166,7 @@ class GestionarClientes extends Thread{
                 ipCliente = paquete.getAddress();
 
                 lineaCliente = "";
-                terminarConexion = "Fin trasmision";
+                terminarConexion = "Fin transmision";
                 finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
                 boolean sesionIniciada = false;
                 while (!finFtp && !sesionIniciada){
@@ -227,7 +227,8 @@ class GestionarClientes extends Thread{
                             if(finFtp){
                                 System.out.println("Cerrando el servidor con puerto " + this.puertoServer);
                             }else{
-                                System.out.println("Comando erroneo");
+                                respuesta = "Comando erroneo";
+                                System.out.println(respuesta);
                             }
                             break;
                     }
@@ -240,7 +241,7 @@ class GestionarClientes extends Thread{
 
                 if(sesionIniciada){
                     Usuario usuarioLogueado = listaUsuarios.get(idUsuarioLogueado);
-                    String explicacionSesionIniciada = "Bienvenido " + usuarioLogueado.getUsername() + "\n" +
+                    String explicacionSesionIniciada = "Bienvenid@ " + usuarioLogueado.getUsername() + "\n" +
                             "Para ver los ficheros que hay en tu carpeta: list\n" +
                             "Para obtener un archivo de tu carpeta: get <nombre_archivo_extension>\n" +
                             "Para crear un archivo en tu carpeta: post <nombre_archivo_extension>\n" +
@@ -274,7 +275,8 @@ class GestionarClientes extends Thread{
                                     System.out.println("Cerrando Sesion");
                                     respuesta = explicacionInicio;
                                 }else{
-                                    System.out.println("Comando erroneo");
+                                    respuesta = "Comando erroneo";
+                                    System.out.println(respuesta);
                                 }
                                 break;
                         }

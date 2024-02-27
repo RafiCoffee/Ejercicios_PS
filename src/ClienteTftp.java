@@ -40,13 +40,13 @@ public class ClienteTftp {
             int nuevoPuerto = Integer.parseInt(nuevoPuertoString);
 
             String lineaCliente = "";
-            String terminarConexion = "Fin trasmision";
+            String terminarConexion = "Fin transmision";
             boolean finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
             while (!finFtp){
                 String respuesta = "";
                 String iniciarSesion = "Iniciando sesion, bienvenido";
                 lineaCliente = "";
-                terminarConexion = "Fin trasmision";
+                terminarConexion = "Fin transmision";
                 finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
                 boolean sesionIniciada = false;
                 while (!finFtp){
@@ -63,6 +63,7 @@ public class ClienteTftp {
                         }
                     }
 
+                    System.out.print("\n==> ");
                     lineaCliente = sc.nextLine();
                     byte[] bufferSalida = new byte[MAXBYTES];
                     bufferSalida = lineaCliente.getBytes();
@@ -84,6 +85,7 @@ public class ClienteTftp {
                         respuesta = new String(paqueteUdp.getData(), 0, paqueteUdp.getLength(), CODTEXTO);
                         System.out.println(respuesta);
 
+                        System.out.print("\n==> ");
                         lineaCliente = sc.nextLine();
                         byte[] bufferSalida = new byte[MAXBYTES];
                         bufferSalida = lineaCliente.getBytes();
@@ -93,7 +95,7 @@ public class ClienteTftp {
                         finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
                     }
 
-                    terminarConexion = "Fin trasmision";
+                    terminarConexion = "Fin transmision";
                     finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
                 }
             }

@@ -2,4 +2,9 @@
 		"id":0,
 		"username":"ruben",
 		"clave":"clave"
+	},
+	{
+		"id":1,
+		"username":"paula",
+		"clave":"hola"
 	}
