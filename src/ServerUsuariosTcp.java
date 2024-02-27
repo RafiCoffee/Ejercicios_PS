@@ -17,7 +17,7 @@ public class ServerUsuariosTcp {
         ServerSocket servidor;
         Socket conexion;
 
-        ArrayList<Usuario> listaUsuarios = new ArrayList<>();
+        ArrayList<User> listaUsuarios = new ArrayList<>();
 
         if(args.length < 1){
             System.err.println("Debes determinar un número para crear el servidor");
@@ -42,13 +42,13 @@ public class ServerUsuariosTcp {
     }
 }
 
-class Usuario implements Comparable<Usuario>{
+class User implements Comparable<User>{
     private final int id;
     private String nombre;
     private String email;
     private String password;
 
-    public Usuario(int id, String nombre, String email, String password) {
+    public User(int id, String nombre, String email, String password) {
         this.id = id;
         this.nombre = nombre;
         this.email = email;
@@ -85,7 +85,7 @@ class Usuario implements Comparable<Usuario>{
 
     @Override
     public String toString() {
-        return "Usuario{" +
+        return "User{" +
                 "id=" + id +
                 ", nombre='" + nombre + '\'' +
                 ", email='" + email + '\'' +
@@ -94,18 +94,18 @@ class Usuario implements Comparable<Usuario>{
     }
 
     @Override
-    public int compareTo(Usuario otroUsuario) {
+    public int compareTo(User otroUsuario) {
         return Integer.compare(this.id, otroUsuario.getId());
     }
 }
 
 class ManejarPeticionesUsuarios extends Thread{
     private Socket socketComunicacion;
-    private ArrayList<Usuario> listaUsuarios;
+    private ArrayList<User> listaUsuarios;
     private AtomicInteger Idautomatica;
     private ClienteTcpApuntes clienteConectado;
 
-    public ManejarPeticionesUsuarios(Socket conexion, ArrayList<Usuario> listaUsuarios) {
+    public ManejarPeticionesUsuarios(Socket conexion, ArrayList<User> listaUsuarios) {
         this.socketComunicacion = conexion;
         this.listaUsuarios = listaUsuarios;
         this.Idautomatica = new AtomicInteger(0);
@@ -134,20 +134,20 @@ class ManejarPeticionesUsuarios extends Thread{
 
                     switch (peticionDesectructurada[0].trim()){
                         case "reg":
-                            listaUsuarios.add(new Usuario(Idautomatica.incrementAndGet(), peticionDesectructurada[1], peticionDesectructurada[2], peticionDesectructurada[3]));
+                            listaUsuarios.add(new User(Idautomatica.incrementAndGet(), peticionDesectructurada[1], peticionDesectructurada[2], peticionDesectructurada[3]));
                             Collections.sort(listaUsuarios);
 
                             try{
-                                Usuario usuarioRegistrado = listaUsuarios.get(Idautomatica.get() - 1);
+                                User usuarioRegistrado = listaUsuarios.get(Idautomatica.get() - 1);
                                 File crearFicheroUsuario = new File("Ficheros", usuarioRegistrado.getNombre() + ".dat");
                                 FileWriter escribirFicheroUsuario = new FileWriter(crearFicheroUsuario);
                                 PrintWriter pWFicheroUsuario = new PrintWriter(escribirFicheroUsuario);
 
                                 String info = usuarioRegistrado.toString();
-                                pWFicheroUsuario.println("Datos del usuario:\n" + info);
+                                pWFicheroUsuario.println("Datos del User:\n" + info);
                                 pWFicheroUsuario.close();
                             }catch (IOException e){
-                                pW.println("Error al crear o escribir en el fichero del usuario");
+                                pW.println("Error al crear o escribir en el fichero del User");
                             }
 
                             pW.println("Te has registrado correctamente, se va a iniciar sesión automaticamente");
@@ -157,7 +157,7 @@ class ManejarPeticionesUsuarios extends Thread{
                         case "log":
                             if(peticionDesectructurada[1].equals("?")){
                                 String listadoIds = "";
-                                for (Usuario usuarios : listaUsuarios) {
+                                for (User usuarios : listaUsuarios) {
                                     listadoIds += usuarios.getId() + " - ";
                                 }
 
