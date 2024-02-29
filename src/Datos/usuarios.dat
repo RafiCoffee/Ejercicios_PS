@@ -7,4 +7,9 @@
 		"id":1,
 		"username":"paula",
 		"clave":"hola"
+	},
+	{
+		"id":2,
+		"username":"ft",
+		"clave":"oko"
 	}

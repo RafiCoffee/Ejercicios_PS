@@ -3,6 +3,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class ClienteTftp {
@@ -44,24 +45,18 @@ public class ClienteTftp {
             boolean finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
             while (!finFtp){
                 String respuesta = "";
-                String iniciarSesion = "Iniciando sesion, bienvenido";
                 lineaCliente = "";
-                terminarConexion = "Fin transmision";
                 finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
-                boolean sesionIniciada = false;
                 while (!finFtp){
                     byte[] bufferEntrada = new byte[MAXBYTES];
                     paqueteUdp = new DatagramPacket(bufferEntrada, bufferEntrada.length, ipServidor, nuevoPuerto);
                     socketCliente.receive(paqueteUdp);
                     respuesta = new String(paqueteUdp.getData(), 0, paqueteUdp.getLength(), CODTEXTO);
-                    System.out.println(respuesta);
-
-                    if(respuesta.length() > 28){
-                        if(respuesta.substring(0, 28).equals(iniciarSesion)){
-                            sesionIniciada = true;
-                            break;
-                        }
+                    if(respuesta.equals("Cerrando el servidor por falta de actividad")){
+                        System.out.println("El servidor se ha cerrado por falta de actividad");
+                        System.exit(0);
                     }
+                    System.out.println(respuesta);
 
                     System.out.print("\n==> ");
                     lineaCliente = sc.nextLine();
@@ -73,35 +68,14 @@ public class ClienteTftp {
                     finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
                 }
 
-                if(sesionIniciada){
-                    respuesta = "";
-                    lineaCliente = "";
-                    terminarConexion = "Disconnect";
-                    finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
-                    while (!finFtp){
-                        byte[] bufferEntrada = new byte[MAXBYTES];
-                        paqueteUdp = new DatagramPacket(bufferEntrada, bufferEntrada.length, ipServidor, nuevoPuerto);
-                        socketCliente.receive(paqueteUdp);
-                        respuesta = new String(paqueteUdp.getData(), 0, paqueteUdp.getLength(), CODTEXTO);
-                        System.out.println(respuesta);
-
-                        System.out.print("\n==> ");
-                        lineaCliente = sc.nextLine();
-                        byte[] bufferSalida = new byte[MAXBYTES];
-                        bufferSalida = lineaCliente.getBytes();
-                        paqueteUdp = new DatagramPacket(bufferSalida, bufferSalida.length, ipServidor, nuevoPuerto);
-                        socketCliente.send(paqueteUdp);
-
-                        finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
-                    }
-
-                    terminarConexion = "Fin transmision";
-                    finFtp = lineaCliente.replaceAll(" ", "").equalsIgnoreCase(terminarConexion.replaceAll(" ", ""));
-                }
             }
 
         } catch (IOException e){
-
+            System.err.println("Error al intentar conectarse con el servidor");
+        }catch (NoSuchElementException e){
+            System.err.println("No se ha enviado o recibido nada");
+        }finally{
+            System.out.println("Saliendo del servidor");
         }
     }
 }
